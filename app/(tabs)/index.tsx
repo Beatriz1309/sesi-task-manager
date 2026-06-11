@@ -1,98 +1,77 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+// 1. Definição da interface Task conforme o requisito
+export interface Task {
+  id: string;
+  title: string;
+  date: string;
+  category: 'Trabalho' | 'Prova' | 'Atividade';
+  description: string;
+}
+
+// 2. Mock de dados local para a FlatList
+const mockTasks: Task[] = [
+  { id: '1', title: 'Prova de PPDM', date: '15/06/2026', category: 'Prova', description: 'Prepare-se para a prova de PPDM revisando os principais conceitos e praticando exercícios anteriores.' },
+  { id: '2', title: 'Entrega de BCD', date: '18/06/2026', category: 'Trabalho', description: 'Entrega do projeto de BCD com as especificações fornecidas.' },
+  { id: '3', title: 'Exercício de React Native', date: '20/06/2026', category: 'Atividade', description: 'Desenvolver uma aplicação simples em React Native para praticar os conceitos aprendidos.' },
+];
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const renderItem = ({ item }: { item: Task }) => {
+    // Mapeamento dinâmico seguro de estilos para o TypeScript
+    const categoryStyle = styles[item.category as keyof typeof styles] || styles.Atividade;
+
+    return (
+      <TouchableOpacity 
+        style={styles.taskCard}
+      onPress={() => router.push('/details/' + item.id as any)}
+      >
+        <View>
+          <Text style={styles.taskTitle}>{item.title}</Text>
+          <Text style={styles.taskDate}>📅 {item.date}</Text>
+        </View>
+        <Text style={[styles.badge, categoryStyle]}>{item.category}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.headerTitle}>Sesi Task Manager</Text>
+      <FlatList
+        data={mockTasks}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContainer}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 16 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, marginTop: 40, color: '#333' },
+  listContainer: { paddingBottom: 20 },
+  taskCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  taskTitle: { fontSize: 16, fontWeight: '600', color: '#222' },
+  taskDate: { fontSize: 14, color: '#666', marginTop: 4 },
+  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, fontSize: 12, overflow: 'hidden', fontWeight: 'bold' },
+  Prova: { backgroundColor: '#ffdde1', color: '#d9383a' },
+  Trabalho: { backgroundColor: '#e2fac8', color: '#4d8412' },
+  Atividade: { backgroundColor: '#e1f5fe', color: '#0288d1' },
 });
